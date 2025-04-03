@@ -15,7 +15,7 @@ export default function Home() {
             />
 
             <h2 className="mt-6 text-center text-3xl tracking-tight font-bold text-gray-900">
-                Sign in to your account
+              Sign in to your account
             </h2>
         </div>
 
