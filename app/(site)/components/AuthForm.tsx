@@ -6,11 +6,17 @@ import { useCallback, useState } from "react";
 import {FieldValues, SubmitHandler, useForm} from "react-hook-form"
 import AuthSocialButton from "./AuthSocialButton";
 import { BsGithub, BsGoogle } from "react-icons/bs";
+import axios from 'axios'
+import toast from "react-hot-toast";
+import { signIn } from "next-auth/react";
+import { useRouter } from "next/navigation";
 type Variant = "LOGIN" | "REGISTER";
 
 const AuthForm = () => {
   const [variant,setVariant] = useState<Variant>("LOGIN");
   const [isLoading,setIsLoading] = useState<boolean >(false);
+
+  const router = useRouter();
 
   const togglerVariant = useCallback(()=>{
     if(variant === "LOGIN") {
@@ -35,24 +41,73 @@ const AuthForm = () => {
     }
   });
 
+//   register or login via credentails
+  const onSubmit: SubmitHandler<FieldValues> = async (data) => {
+        setIsLoading(true);
 
-  const onSubmit: SubmitHandler<FieldValues> = (data)=>{
+        if (variant === "REGISTER") {
+            axios.post("/api/register", data)
+                .then(() => {
+                    toast.success("Registered!");
+                    setIsLoading(false);
+                })
+                .catch(() => {
+                    toast.error("Something went wrong");
+                    setIsLoading(false);
+                })
+        }
+
+        if (variant === "LOGIN") {
+            signIn("credentials", {
+                ...data,
+                redirect: false
+            }).then((callback) => {
+                if (callback?.error) {
+                    toast.error("Invalid credentials");
+                } else {
+                    toast.success("Logged in!");
+                }
+                setIsLoading(false); 
+            }).catch(error => {
+                console.error("Sign-in error:", error);
+                toast.error("Something went wrong");
+                setIsLoading(false);
+            });
+        }
+    };
+
+
+  // register or login via social 
+  const socialAction = async (action: string) => {
     setIsLoading(true);
-    if(variant === "REGISTER") {
-        // Axios Register
+    
+    try {
+      const callback = await signIn(action, { 
+        redirect: false,
+        callbackUrl: '/' // Explicitly set callback URL
+      });
+  
+      console.log("Social login callback:", callback);
+  
+      if (callback?.error) {
+        toast.error(callback.error);
+        // For debugging - remove in production
+        console.error("Detailed error:", {
+          url: callback.url,
+          error: callback.error
+        });
+      } else if (callback?.ok) {
+        toast.success("Logged in successfully!");
+        router.push(callback.url || '/');
+      }
+    } catch (error) {
+      console.error("Sign-in error:", error);
+      toast.error(error instanceof Error ? error.message : "Something went wrong");
+    } finally {
+      setIsLoading(false);
     }
-    if(variant === "LOGIN") {
-        // NextAuth Loing
-    }
-
-    setIsLoading(false);
-  }
-
-  const socialAction = (action:string)=>{
-    setIsLoading(true);
-
-    // NextAuth social sign in
-  }
+  };
+  
 
   return (
     <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
@@ -96,7 +151,7 @@ const AuthForm = () => {
                     <AuthSocialButton icon={BsGithub}
                     onClick={()=> socialAction("github")}/>
                     <AuthSocialButton icon={BsGoogle}
-                    onClick={()=> socialAction("github")}/>
+                    onClick={()=> socialAction("google")}/>
                 </div>
             </div>
 
