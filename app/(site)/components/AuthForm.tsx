@@ -9,14 +9,12 @@ import { BsGithub, BsGoogle } from "react-icons/bs";
 import axios from 'axios'
 import toast from "react-hot-toast";
 import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
 type Variant = "LOGIN" | "REGISTER";
 
 const AuthForm = () => {
   const [variant,setVariant] = useState<Variant>("LOGIN");
   const [isLoading,setIsLoading] = useState<boolean >(false);
 
-  const router = useRouter();
 
   const togglerVariant = useCallback(()=>{
     if(variant === "LOGIN") {
@@ -84,21 +82,13 @@ const AuthForm = () => {
     try {
       const callback = await signIn(action, { 
         redirect: false,
-        callbackUrl: '/' // Explicitly set callback URL
+        callbackUrl: '/'
       });
-  
-      console.log("Social login callback:", callback);
   
       if (callback?.error) {
         toast.error(callback.error);
-        // For debugging - remove in production
-        console.error("Detailed error:", {
-          url: callback.url,
-          error: callback.error
-        });
       } else if (callback?.ok) {
         toast.success("Logged in successfully!");
-        router.push(callback.url || '/');
       }
     } catch (error) {
       console.error("Sign-in error:", error);
