@@ -49,17 +49,18 @@ const AuthForm = () => {
   });
 
 //   register or login via credentails
-  const onSubmit: SubmitHandler<FieldValues> = async (data) => {
+  const onSubmit: SubmitHandler<FieldValues> = (data) => {
         setIsLoading(true);
 
         if (variant === "REGISTER") {
             axios.post("/api/register", data)
+            // immediate login also
             .then(() => {
-                toast.success("Registered!");
+                signIn("credentials",data);
                 setIsLoading(false);
             })
             .catch(() => {
-                toast.error("Something went wrong");
+                toast.error("Something went wrong")
                 setIsLoading(false);
             })
         }
@@ -73,6 +74,7 @@ const AuthForm = () => {
                     toast.error("Invalid credentials");
                 } else {
                     toast.success("Logged in!");
+                    router.push("/users");
                 }
             }).catch(error => {
                 console.error("Sign-in error:", error);
