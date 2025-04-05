@@ -2,19 +2,28 @@
 
 import Button from "@/app/components/Button";
 import Input from "@/app/components/inputs/Input";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {FieldValues, SubmitHandler, useForm} from "react-hook-form"
 import AuthSocialButton from "./AuthSocialButton";
 import { BsGithub, BsGoogle } from "react-icons/bs";
 import axios from 'axios'
 import toast from "react-hot-toast";
-import { signIn } from "next-auth/react";
+import { signIn, useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 type Variant = "LOGIN" | "REGISTER";
 
 const AuthForm = () => {
   const [variant,setVariant] = useState<Variant>("LOGIN");
   const [isLoading,setIsLoading] = useState<boolean >(false);
+  
+  const session = useSession();
+  const router = useRouter();
 
+  useEffect(()=>{
+    if(session.status === 'authenticated'){
+        router.push("/users");
+    }
+  },[session.status,router])
 
   const togglerVariant = useCallback(()=>{
     if(variant === "LOGIN") {
@@ -45,14 +54,14 @@ const AuthForm = () => {
 
         if (variant === "REGISTER") {
             axios.post("/api/register", data)
-                .then(() => {
-                    toast.success("Registered!");
-                    setIsLoading(false);
-                })
-                .catch(() => {
-                    toast.error("Something went wrong");
-                    setIsLoading(false);
-                })
+            .then(() => {
+                toast.success("Registered!");
+                setIsLoading(false);
+            })
+            .catch(() => {
+                toast.error("Something went wrong");
+                setIsLoading(false);
+            })
         }
 
         if (variant === "LOGIN") {
@@ -65,12 +74,12 @@ const AuthForm = () => {
                 } else {
                     toast.success("Logged in!");
                 }
-                setIsLoading(false); 
             }).catch(error => {
                 console.error("Sign-in error:", error);
                 toast.error("Something went wrong");
+            }).finally(()=>{
                 setIsLoading(false);
-            });
+            })
         }
     };
 
@@ -78,26 +87,21 @@ const AuthForm = () => {
   // register or login via social 
   const socialAction = async (action: string) => {
     setIsLoading(true);
+
+    signIn(action,{ redirect:false })
+    .then((callback)=>{
+        if(callback?.error){
+            toast.error("Invalid Credentials");
+        }
+        else if(callback?.ok){
+            toast.success("Logged In");
+        }
+    }).finally(()=>{
+        setIsLoading(false);
+    })
     
-    try {
-      const callback = await signIn(action, { 
-        redirect: false,
-        callbackUrl: '/'
-      });
-  
-      if (callback?.error) {
-        toast.error(callback.error);
-      } else if (callback?.ok) {
-        toast.success("Logged in successfully!");
-      }
-    } catch (error) {
-      console.error("Sign-in error:", error);
-      toast.error(error instanceof Error ? error.message : "Something went wrong");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-  
+  }
+
 
   return (
     <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
