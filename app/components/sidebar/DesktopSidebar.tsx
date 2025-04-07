@@ -13,7 +13,7 @@ interface DesktopSidebarProps{
 const DesktopSidebar:FC<DesktopSidebarProps> = ({currentUser}) => {
     // using this state to open the sidebar for desktop and hiding on mobile
   const [isOpen,setIsOpen] = useState(false);
-  console.log(currentUser);
+//   console.log(currentUser);
   const routes = useRoutes();
   return (
     <div className="hidden lg:fixed lg:inset-y-0 lg:left-0 lg:z-40 lg:w-20 xl:px-6 lg:overflow-y-auto

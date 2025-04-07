@@ -20,6 +20,7 @@ const UserBox:FC<UserBoxProps> = ({data}) => {
         userId:data.id
     })
     .then((data)=>{
+        console.log(data)
         router.push(`/converstaions/${data?.data?.id}`)
         setIsLoading(false);
     }).catch(()=>{
