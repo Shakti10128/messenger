@@ -71,6 +71,7 @@ model Message{
   seenIds            String[] @db.ObjectId
   seen               User[] @relation("Seen",fields: [seenIds], references: [id])
 
+  // it should be: conversationId not conversationIds
   conversationIds    String @db.ObjectId
   conversation       Conversation @relation(fields: [conversationIds],references: [id], onDelete: Cascade)
 
